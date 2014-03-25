@@ -2,12 +2,16 @@ apply from: 'build.gradle'
 
 import groovy.sql.Sql
 
-task createUserTest(dependsOn: loadDriver) << {
-	onUsers("Users $user does not exist in $dburl") { users -> users.find { it.User == user } }
+task createUsersTest(dependsOn: loadDriver) << {
+	onUsers { 
+		assert it.containsAll(users.split(',')), "Users ${users.split(',') - it} does not exist in $dburl"
+	}
 }
 
-task removeUserTest(dependsOn: loadDriver) << {
-	onUsers("Users $user exist in $dburl") { users -> !users.find { it.User == user } }
+task removeUsersTest(dependsOn: loadDriver) << {
+	onUsers { 
+		assert !it.containsAll(users.split(',')), "Users ${it.intersect(users.split(',') as List)} exist in $dburl"
+	}
 }
 
 task createSchemaTest(dependsOn: loadDriver) << {
@@ -18,10 +22,10 @@ task removeSchemaTest(dependsOn: loadDriver) << {
 	onSchema("Schemas $schema exist in $dburl") { sql -> !sql.connection.metaData }
 }
 
-def onUsers(message, closure) {
+def onUsers(closure) {
 	def sql = Sql.newInstance(dburl, admin, adminpass)
-	def users = sql.dataSet('mysql.user').rows()
-	assert closure(users), message
+	def users = sql.dataSet('mysql.user').rows().collect { it.User }
+	closure(users)
 }
 
 def onSchema(message, closure) {

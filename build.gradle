@@ -20,15 +20,26 @@ task loadDriver << {
 	Class.forName(getProperty(db))
 }
 
-task createUser(dependsOn: loadDriver) << {
-	execute "CREATE USER $user@$dburl IDENTIFIED BY $pass;"
+task createUsers(dependsOn: loadDriver) << {
+	execute { sql -> 
+		Map entries = [users.split(','), pass.split(',')].transpose().collectEntries()
+		entries.each {
+			sql.execute "CREATE USER ${it.key}@$dburl IDENTIFIED BY ${it.value};"
+			println "User ${it.key} with password ${it.value} has been created." 
+		}
+	}
 }
 
-task removeUser(dependsOn: loadDriver) << {
-	execute	"DROP USER $user@$dburl;"
+task removeUsers(dependsOn: loadDriver) << {
+	execute	{ sql ->
+		users.split(',').each {
+			sql.execute "DROP USER $it@$dburl;"
+			println "User $it has been removed." 
+		}
+	}
 }
 
-def execute(query) {
+def execute(closure) {
 	def sql = Sql.newInstance(dburl, admin, adminpass)
-	sql.execute query
+	closure(sql)
 }
