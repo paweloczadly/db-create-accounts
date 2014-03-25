@@ -1,0 +1,30 @@
+apply from: 'build.gradle'
+
+import groovy.sql.Sql
+
+task createUserTest(dependsOn: loadDriver) << {
+	onUsers("Users $user does not exist in $dburl") { users -> users.find { it.User == user } }
+}
+
+task removeUserTest(dependsOn: loadDriver) << {
+	onUsers("Users $user exist in $dburl") { users -> !users.find { it.User == user } }
+}
+
+task createSchemaTest(dependsOn: loadDriver) << {
+	onSchema("Schemas $schema does not exist in $dburl") { sql -> sql.connection.metaData }
+}
+
+task removeSchemaTest(dependsOn: loadDriver) << {
+	onSchema("Schemas $schema exist in $dburl") { sql -> !sql.connection.metaData }
+}
+
+def onUsers(message, closure) {
+	def sql = Sql.newInstance(dburl, admin, adminpass)
+	def users = sql.dataSet('mysql.user').rows()
+	assert closure(users), message
+}
+
+def onSchema(message, closure) {
+	def sql = Sql.newInstance("$dburl/$schema", admin, adminpass)
+	assert closure(sql), message
+}

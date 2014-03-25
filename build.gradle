@@ -1,0 +1,34 @@
+import groovy.sql.Sql
+
+repositories {
+	mavenCentral()
+}
+
+configurations {
+    driver
+}
+
+dependencies {
+	driver 'mysql:mysql-connector-java:5.1.6'
+}
+
+configurations.driver.each {
+	GroovyObject.class.classLoader.addURL it.toURL()
+}
+
+task loadDriver << {
+	Class.forName(getProperty(db))
+}
+
+task createUser(dependsOn: loadDriver) << {
+	execute "CREATE USER $user@$dburl IDENTIFIED BY $pass;"
+}
+
+task removeUser(dependsOn: loadDriver) << {
+	execute	"DROP USER $user@$dburl;"
+}
+
+def execute(query) {
+	def sql = Sql.newInstance(dburl, admin, adminpass)
+	sql.execute query
+}
