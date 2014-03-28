@@ -1,7 +1,9 @@
 import groovy.sql.Sql
 
 repositories {
-	mavenCentral()
+    flatDir {
+        dirs 'lib'
+    }
 }
 
 configurations {
@@ -9,7 +11,19 @@ configurations {
 }
 
 dependencies {
-	driver 'mysql:mysql-connector-java:5.1.6'
+	driver fileTree('lib')
+}
+
+ext {
+	// jdbc urls:
+	mysqlJdbcUrl = "jdbc:mysql://${dburl}:3306"
+	mssqlUrl 	 = "jdbc:sqlserver://${dburl}:1433"
+
+	// jdbc passwords:
+	mysqlClass = 'com.mysql.jdbc.Driver'
+	oracleClass = 'oracle.jdbc.OracleDriver'
+	sqlserverClass = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
+	hanaClass = 'com.sap.db.jdbc.Driver'
 }
 
 configurations.driver.each {
@@ -17,29 +31,37 @@ configurations.driver.each {
 }
 
 task loadDriver << {
-	Class.forName(getProperty(db))
+	Class.forName(project."${db}Class")
 }
 
 task createUsers(dependsOn: loadDriver) << {
-	execute { sql -> 
+	execute(project.mysqlJdbcUrl) { sql ->
 		Map entries = [users.split(','), pass.split(',')].transpose().collectEntries()
 		entries.each {
-			sql.execute "CREATE USER ${it.key}@$dburl IDENTIFIED BY ${it.value};"
-			println "User ${it.key} with password ${it.value} has been created." 
+			sql.execute project."${db}CreateUser"(it.key, it.value)
+			println "User ${it.key} with password ${it.value} has been created."
 		}
 	}
 }
 
 task removeUsers(dependsOn: loadDriver) << {
-	execute	{ sql ->
+	execute(project.mysqlJdbcUrl) { sql ->
 		users.split(',').each {
-			sql.execute "DROP USER $it@$dburl;"
-			println "User $it has been removed." 
+			sql.execute project."${db}DeleteUser"(it)
+			println "User $it has been removed."
 		}
 	}
 }
 
-def execute(closure) {
-	def sql = Sql.newInstance(dburl, admin, adminpass)
+def execute(jdbcUrl, closure) {
+	def sql = Sql.newInstance(jdbcUrl, admin, adminpass)
 	closure(sql)
+}
+
+String mysqlCreateUser(user, password) {
+	return "CREATE USER $user@$dburl IDENTIFIED BY '$password';"
+}
+
+String mysqlDeleteUser(user) {
+	return "DROP USER $user@$dburl;"
 }
