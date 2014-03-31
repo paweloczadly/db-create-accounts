@@ -34,37 +34,35 @@ task loadDriver << {
 	Class.forName(project."${db}Class")
 }
 
-task createUsers(dependsOn: loadDriver) << {
-	execute(project."${db}JdbcUrl") { sql ->
-		Map entries = [users.split(','), pass.split(',')].transpose().collectEntries()
-		entries.each {
-			sql.execute project."${db}CreateUser"(it.key, it.value)
-			println "User ${it.key} with password ${it.value} has been created."
-		}
+task createAccounts(dependsOn: loadDriver) << {
+	execute(project."${db}JdbcUrl") { sql, user, schema, password ->
+		sql.execute project."${db}CreateUser"(user, password)
+		sql.execute project."${db}CreateSchema"(schema)
+		sql.execute project."${db}ConnectUserToSchema"(user, password, schema)
+		println "User ${user} with password ${password} has been created for ${schema} schema on $dburl."
 	}
 }
 
-task createSchemas(dependsOn: loadDriver) << {
-	execute(project."${db}JdbcUrl") { sql ->
-		schemas.split(',').each {
-			sql.execute project."${db}CreateSchema"(it)
-			println "Schema $it has been created on $dburl."
-		}
-	}
-}
-
-task removeUsers(dependsOn: loadDriver) << {
-	execute(project."${db}JdbcUrl") { sql ->
-		users.split(',').each {
-			sql.execute project."${db}DeleteUser"(it)
-			println "User $it has been removed."
-		}
+task cleanup(dependsOn: loadDriver) << {
+	execute(project."${db}JdbcUrl") { sql, user, schema, password ->
+		sql.execute project."${db}DeleteUser"(user)
+		sql.execute project."${db}DeleteSchema"(schema)
+		println "User ${user} and ${schema} schema has been removed on $dburl."
 	}
 }
 
 def execute(jdbcUrl, closure) {
-	def sql = Sql.newInstance(jdbcUrl, admin, adminpass)
-	closure(sql)
+	def users = users.split(',')
+	def passwords = pass.split(',')
+	def schemas = schemas.split(',')
+
+	if ((users.size() == passwords.size()) && (users.size() == schemas.size())) {
+		def sql = Sql.newInstance(jdbcUrl, admin, adminpass)
+
+		for (i in 0..schemas.size() - 1) {
+			closure(sql, users[i], passwords[i], schemas[i])
+		}
+	}
 }
 
 String mysqlCreateUser(user, password) {
@@ -73,6 +71,10 @@ String mysqlCreateUser(user, password) {
 
 String mysqlCreateSchema(schema) {
 	return "CREATE DATABASE IF NOT EXISTS $schema;"
+}
+
+String mysqlConnectUserToSchema(user, password, schema) {
+	return "GRANT ALL PRIVILEGES ON $schema.* TO '$user'@'$dburl';"
 }
 
 String mysqlDeleteUser(user) {
