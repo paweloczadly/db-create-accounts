@@ -35,7 +35,7 @@ task loadDriver << {
 }
 
 task createUsers(dependsOn: loadDriver) << {
-	execute(project.mysqlJdbcUrl) { sql ->
+	execute(project."${db}JdbcUrl") { sql ->
 		Map entries = [users.split(','), pass.split(',')].transpose().collectEntries()
 		entries.each {
 			sql.execute project."${db}CreateUser"(it.key, it.value)
@@ -44,8 +44,17 @@ task createUsers(dependsOn: loadDriver) << {
 	}
 }
 
+task createSchemas(dependsOn: loadDriver) << {
+	execute(project."${db}JdbcUrl") { sql ->
+		schemas.split(',').each {
+			sql.execute project."${db}CreateSchema"(it)
+			println "Schema $it has been created on $dburl."
+		}
+	}
+}
+
 task removeUsers(dependsOn: loadDriver) << {
-	execute(project.mysqlJdbcUrl) { sql ->
+	execute(project."${db}JdbcUrl") { sql ->
 		users.split(',').each {
 			sql.execute project."${db}DeleteUser"(it)
 			println "User $it has been removed."
@@ -62,6 +71,14 @@ String mysqlCreateUser(user, password) {
 	return "CREATE USER $user@$dburl IDENTIFIED BY '$password';"
 }
 
+String mysqlCreateSchema(schema) {
+	return "CREATE DATABASE IF NOT EXISTS $schema;"
+}
+
 String mysqlDeleteUser(user) {
 	return "DROP USER $user@$dburl;"
+}
+
+String mysqlDeleteSchema(schema) {
+	return "DROP DATABASE $schema;"
 }
