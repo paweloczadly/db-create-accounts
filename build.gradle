@@ -20,7 +20,7 @@ ext {
 	mysqlJdbcUrl 		= "jdbc:mysql://${dburl}:${port}"
 	sqlserverJdbcUrl 	= "jdbc:sqlserver://${dburl}:${port}"
 
-	// jdbc passwords:
+	// jdbc classes:
 	mysqlClass 			= 'com.mysql.jdbc.Driver'
 	oracleClass 		= 'oracle.jdbc.OracleDriver'
 	sqlserverClass 		= 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
