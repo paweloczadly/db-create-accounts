@@ -1,7 +1,7 @@
 import groovy.sql.Sql
 
-apply from: 'mysql.gradle'
-apply from: 'sqlserver.gradle'
+apply from: 'db/mysql.gradle'
+apply from: 'db/sqlserver.gradle'
 
 repositories {
     flatDir { dirs 'lib' }
