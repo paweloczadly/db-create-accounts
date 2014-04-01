@@ -17,8 +17,8 @@ dependencies {
 
 ext {
 	// jdbc urls:
-	mysqlJdbcUrl 		= "jdbc:mysql://${dburl}:3306"
-	sqlserverJdbcUrl 	= "jdbc:sqlserver://${dburl}:1433"
+	mysqlJdbcUrl 		= "jdbc:mysql://${dburl}:${port}"
+	sqlserverJdbcUrl 	= "jdbc:sqlserver://${dburl}:${port}"
 
 	// jdbc passwords:
 	mysqlClass 			= 'com.mysql.jdbc.Driver'
@@ -38,21 +38,21 @@ task loadDriver << {
 task createAccounts(dependsOn: loadDriver) << {
 	execute(project."${db}JdbcUrl") { sql, user, password, schema ->
 		sql.execute project."${db}CreateSchema"(schema)
-		println "Schema $schema has been created on $dburl"
+		println "Schema $schema has been created on | $db | ${dburl}:$port."
 
 		sql.execute project."${db}CreateUser"(user, password)
 		sql.execute project."${db}ConnectUserToSchema"(user, password, schema)
-		println "User $user with password $password has been created on $dburl."
+		println "User $user with password $password has been created on | $db | ${dburl}:$port."
 	}
 }
 
 task cleanup(dependsOn: loadDriver) << {
 	execute(project."${db}JdbcUrl") { sql, user, password, schema ->
 		sql.execute project."${db}DeleteUser"(user)
-		println "User $user has been removed on $dburl"
+		println "User $user has been removed on | $db | ${dburl}:$port."
 
 		sql.execute project."${db}DeleteSchema"(schema)
-		println "Schema $schema has been removed on $dburl."
+		println "Schema $schema has been removed on | $db | ${dburl}:$port."
 	}
 }
 
