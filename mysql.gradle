@@ -1,0 +1,19 @@
+ext.mysqlCreateUser = { user, password ->
+    return "CREATE USER "  + user + "@" + dburl + " IDENTIFIED BY '" + password + "';"
+}
+
+ext.mysqlCreateSchema = { schema ->
+    return "CREATE DATABASE IF NOT EXISTS "  + schema + ";"
+}
+
+ext.mysqlConnectUserToSchema = { user, password, schema ->
+    return "GRANT ALL PRIVILEGES ON " + schema + ".* TO '" + user + "'@'" + dburl + "';"
+}
+
+ext.mysqlDeleteUser = { user ->
+    return "DROP USER " + user + "@" + dburl + ";"
+}
+
+ext.mysqlDeleteSchema = { schema ->
+    return "DROP DATABASE " + schema + ";"
+}

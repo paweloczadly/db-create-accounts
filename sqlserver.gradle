@@ -1,0 +1,19 @@
+ext.sqlserverCreateUser = { user, password ->
+    "CREATE LOGIN " + user + " WITH PASSWORD = '" + password + "';"
+}
+
+ext.sqlserverCreateSchema = { schema ->
+    "CREATE DATABASE " + schema + ";"
+}
+
+ext.sqlserverConnectUserToSchema = { user, password, schema ->
+    "CREATE USER " + user + " FOR LOGIN " + user + " WITH DEFAULT_SCHEMA = " + schema + ";"
+}
+
+ext.sqlserverDeleteUser = { user ->
+    "DROP USER " + user + "; EXEC sp_droplogin '" + user + "';"
+}
+
+ext.sqlserverDeleteSchema = { schema ->
+    "DROP DATABASE " + schema + ";"
+}
