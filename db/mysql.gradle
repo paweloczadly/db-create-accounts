@@ -1,5 +1,5 @@
 ext.mysqlCreateUser = { user, password ->
-    return "CREATE USER "  + user + "@" + dburl + " IDENTIFIED BY '" + password + "';"
+    return "CREATE USER "  + user + "@'%' IDENTIFIED BY '" + password + "';"
 }
 
 ext.mysqlCreateSchema = { schema ->
@@ -7,11 +7,11 @@ ext.mysqlCreateSchema = { schema ->
 }
 
 ext.mysqlConnectUserToSchema = { user, password, schema ->
-    return "GRANT ALL PRIVILEGES ON " + schema + ".* TO '" + user + "'@'" + dburl + "';"
+    return "GRANT ALL PRIVILEGES ON " + schema + ".* TO '" + user + "'@'%';"
 }
 
 ext.mysqlDeleteUser = { user ->
-    return "DROP USER " + user + "@" + dburl + ";"
+    return "DROP USER " + user + "@'%';"
 }
 
 ext.mysqlDeleteSchema = { schema ->

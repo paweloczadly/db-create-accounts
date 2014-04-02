@@ -1,7 +1,8 @@
 import groovy.sql.Sql
 
-apply from: 'db/mysql.gradle'
-apply from: 'db/sqlserver.gradle'
+fileTree('db').each {
+	apply from: "$it"
+}
 
 repositories {
     flatDir { dirs 'lib' }
@@ -45,6 +46,7 @@ task createAccounts(dependsOn: loadDriver) << {
 		println "User $user with password $password has been created on | $db | ${dburl}:$port."
 	}
 }
+createAccounts.description = 'Creates DB accounts and schemas. Use comma-separated values in -Pusers= -Ppasswords= -Pschemas='
 
 task cleanup(dependsOn: loadDriver) << {
 	execute(project."${db}JdbcUrl") { sql, user, password, schema ->
@@ -55,6 +57,7 @@ task cleanup(dependsOn: loadDriver) << {
 		println "Schema $schema has been removed on | $db | ${dburl}:$port."
 	}
 }
+cleanup.description = 'Removes DB accounts and schemas. Use comma-separated values in -Pusers= -Ppasswords= -Pschemas='
 
 def execute(jdbcUrl, closure) {
 	def users = users.split(',')
