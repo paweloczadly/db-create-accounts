@@ -1,19 +1,23 @@
+ext.mysqlClass = 'com.mysql.jdbc.Driver'
+
+ext.mysqlJdbcUrl = { dburl, port -> "jdbc:mysql://${dburl}:${port}" }
+
 ext.mysqlCreateUser = { user, password ->
-    return "CREATE USER "  + user + "@'%' IDENTIFIED BY '" + password + "';"
+    "CREATE USER "  + user + "@'%' IDENTIFIED BY '" + password + "';"
 }
 
 ext.mysqlCreateSchema = { schema ->
-    return "CREATE DATABASE IF NOT EXISTS "  + schema + ";"
+    "CREATE DATABASE IF NOT EXISTS "  + schema + ";"
 }
 
 ext.mysqlConnectUserToSchema = { user, password, schema ->
-    return "GRANT ALL PRIVILEGES ON " + schema + ".* TO '" + user + "'@'%';"
+    "GRANT ALL PRIVILEGES ON " + schema + ".* TO '" + user + "'@'%';"
 }
 
 ext.mysqlDeleteUser = { user ->
-    return "DROP USER " + user + "@'%';"
+    "DROP USER " + user + "@'%';"
 }
 
 ext.mysqlDeleteSchema = { schema ->
-    return "DROP DATABASE " + schema + ";"
+    "DROP DATABASE " + schema + ";"
 }

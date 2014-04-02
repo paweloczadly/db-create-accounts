@@ -16,28 +16,16 @@ dependencies {
 	driver fileTree('lib')
 }
 
-ext {
-	// jdbc urls:
-	mysqlJdbcUrl 		= "jdbc:mysql://${dburl}:${port}"
-	sqlserverJdbcUrl 	= "jdbc:sqlserver://${dburl}:${port}"
-
-	// jdbc classes:
-	mysqlClass 			= 'com.mysql.jdbc.Driver'
-	oracleClass 		= 'oracle.jdbc.OracleDriver'
-	sqlserverClass 		= 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
-	hanaClass 			= 'com.sap.db.jdbc.Driver'
-}
-
 configurations.driver.each {
 	GroovyObject.class.classLoader.addURL it.toURL()
 }
 
 task loadDriver << {
-	Class.forName(project."${db}Class")
+	Class.forName project."${db}Class"
 }
 
 task createAccounts(dependsOn: loadDriver) << {
-	execute(project."${db}JdbcUrl") { sql, user, password, schema ->
+	execute(project."${db}JdbcUrl"(dburl, port)) { sql, user, password, schema ->
 		sql.execute project."${db}CreateSchema"(schema)
 		println "Schema $schema has been created on | $db | ${dburl}:$port."
 
@@ -49,7 +37,7 @@ task createAccounts(dependsOn: loadDriver) << {
 createAccounts.description = 'Creates DB accounts and schemas. Use comma-separated values in -Pusers= -Ppasswords= -Pschemas='
 
 task cleanup(dependsOn: loadDriver) << {
-	execute(project."${db}JdbcUrl") { sql, user, password, schema ->
+	execute(project."${db}JdbcUrl"(dburl, port)) { sql, user, password, schema ->
 		sql.execute project."${db}DeleteUser"(user)
 		println "User $user has been removed on | $db | ${dburl}:$port."
 
@@ -70,6 +58,6 @@ def execute(jdbcUrl, closure) {
 			closure(sql, users[i], passwords[i], schemas[i])
 		}
 	} else {
-		throw new GradleException('You have to pass the same count of users, passwords and schemas.')
+		throw new GradleException 'You have to pass the same count of users, passwords and schemas.'
 	}
 }

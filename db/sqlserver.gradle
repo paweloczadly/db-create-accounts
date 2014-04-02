@@ -1,3 +1,7 @@
+ext.sqlserverClass = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
+
+ext.sqlserverJdbcUrl = { dburl, port -> "jdbc:sqlserver://${dburl}:${port}" }
+
 ext.sqlserverCreateUser = { user, password ->
     "CREATE LOGIN " + user + " WITH PASSWORD = '" + password + "';"
 }
