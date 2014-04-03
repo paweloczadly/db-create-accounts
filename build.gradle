@@ -58,6 +58,6 @@ def execute(jdbcUrl, closure) {
 			closure(sql, users[i], passwords[i], schemas[i])
 		}
 	} else {
-		throw new GradleException 'You have to pass the same count of users, passwords and schemas.'
+		throw new GradleException('You have to pass the same count of users, passwords and schemas.')
 	}
 }
