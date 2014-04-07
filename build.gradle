@@ -48,13 +48,13 @@ task cleanup(dependsOn: loadDriver) << {
 cleanup.description = 'Removes DB accounts and schemas. Use comma-separated values in -Pusers= -Ppasswords= -Pschemas='
 
 def execute(jdbcUrl, closure) {
-	def users = users.split(',')
-	def passwords = pass.split(',')
-	def schemas = schemas.split(',')
+	def (users, passwords, schemas) = [users, pass, schemas].collect {
+		it.split(',')
+	}
 
 	if ((users.size() == passwords.size()) && (users.size() == schemas.size())) {
 		def sql = Sql.newInstance(jdbcUrl, admin, adminpass)
-		for (i in 0..schemas.size() - 1) {
+		for (i in 0..(schemas.size() - 1)) {
 			closure(sql, users[i], passwords[i], schemas[i])
 		}
 	} else {
