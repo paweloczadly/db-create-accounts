@@ -1,0 +1,33 @@
+import groovy.sql.Sql
+
+ext.mysqlCreateAccountsTest = { sql, users, passwords, schemas ->
+    onUsers(sql) { rows ->
+        rows.intersect(users as List).each {
+            assert it.Host == '%'
+        }
+    }
+    onUsers(sql) { rows -> assert rows.collect{ it.User }.containsAll(users) }
+    onSchemas(schemas) { assert Sql.newInstance("${sql.connection.URL}/$it", admin, adminpass) }
+}
+
+ext.mysqlCleanupTest = { sql, users, passwords, schemas ->
+    onUsers(sql) { rows -> assert !rows.collect{ it.User }.containsAll(users) }
+    onSchemas(schemas) {
+        try {
+            Sql.newInstance("${sql.connection.URL}/$it", admin, adminpass)
+        } catch(Exception e) {
+            assert e.message == "Unknown database '${it.toLowerCase()}'"
+        }
+    }
+}
+
+def onUsers(sql, closure) {
+    def rows = sql.dataSet('mysql.user').rows()
+    closure(rows)
+}
+
+def onSchemas(schemas, closure) {
+    schemas.each {
+        closure(it)
+    }
+}

@@ -1,0 +1,17 @@
+apply from: 'build.gradle'
+
+fileTree('db-test').each {
+    apply from: "$it"
+}
+
+task createAccountsTest(dependsOn: loadDriver) << {
+    execute(project."${db}JdbcUrl"(dburl, port)) { sql, users, passwords, schemas ->
+        project."${db}CreateAccountsTest"(sql, users, passwords, schemas)
+    }
+}
+
+task cleanupTest(dependsOn: loadDriver) << {
+    execute(project."${db}JdbcUrl"(dburl, port)) { sql, users, passwords, schemas ->
+        project."${db}CleanupTest"(sql, users, passwords, schemas)
+    }
+}
