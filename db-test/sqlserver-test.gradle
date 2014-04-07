@@ -1,0 +1,30 @@
+import groovy.sql.Sql
+
+ext.sqlserverCreateAccountsTest = { sql, users, passwords, schemas ->
+    onUsers(sql) { rows -> assert rows.collect{ it.name }.containsAll(users) }
+    def url = sql.connection.metaData.URL.split(';')[0]
+    onSchemas(schemas) { assert Sql.newInstance("$url;databaseName=${it}", admin, adminpass) }
+}
+
+ext.sqlserverCleanupTest = { sql, users, passwords, schemas ->
+    onUsers(sql) { rows -> assert !rows.collect{ it.name }.containsAll(users) }
+    def url = sql.connection.metaData.URL.split(';')[0]
+    onSchemas(schemas) {
+        try {
+            Sql.newInstance("$url;databaseName=${it}", admin, adminpass)
+        } catch(Exception e) {
+            assert e.message.contains("Cannot open database \"$it\"")
+        }
+    }
+}
+
+def onUsers(sql, closure) {
+    def rows = sql.dataSet('sys.sysusers').rows()
+    closure(rows)
+}
+
+def onSchemas(schemas, closure) {
+    schemas.each {
+        closure(it)
+    }
+}
